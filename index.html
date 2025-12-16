@@ -4,224 +4,331 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Bolão Mega-Sena</title>
-
   <style>
     body {
       font-family: Arial, sans-serif;
-      max-width: 900px;
+      max-width: 980px;
       margin: 20px auto;
-      padding: 10px;
+      padding: 12px;
     }
+    h1 { text-align: center; margin-bottom: 8px; }
 
-    h1 { text-align: center; }
+    .hint {
+      text-align: center;
+      color: #444;
+      margin-bottom: 18px;
+      font-size: 14px;
+    }
 
     .field { margin-bottom: 16px; }
+    label { font-weight: 600; }
+
+    input[type="text"] {
+      width: 100%;
+      max-width: 360px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #bbb;
+      margin-top: 6px;
+    }
 
     .game {
-      border: 1px solid #ccc;
-      padding: 10px;
-      margin-bottom: 16px;
-      border-radius: 6px;
+      border: 1px solid #ddd;
+      padding: 12px;
+      margin-bottom: 14px;
+      border-radius: 10px;
+      background: #fff;
     }
-
     .game-title {
-      font-weight: bold;
+      font-weight: 700;
       margin-bottom: 8px;
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
     }
-
+    .counter {
+      font-size: 12px;
+      color: #666;
+      font-weight: 600;
+    }
     .numbers {
       display: flex;
       flex-wrap: wrap;
-      gap: 4px;
+      gap: 6px;
     }
-
     .number-btn {
-      width: 36px;
-      height: 32px;
+      width: 38px;
+      height: 34px;
       border: 1px solid #aaa;
-      border-radius: 6px;
+      border-radius: 10px;
       cursor: pointer;
-      text-align: center;
       font-size: 14px;
-      background-color: #f5f5f5;
+      background: #f5f5f5;
     }
-
     .number-btn.selected {
-      background-color: #4caf50;
-      color: white;
-      font-weight: bold;
-      border-color: #2f8f33;
+      background: #2e7d32;
+      color: #fff;
+      border-color: #1b5e20;
+      font-weight: 700;
     }
 
-    .counter {
-      font-size: 12px;
-      color: #555;
-      margin-bottom: 6px;
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 12px;
+      flex-wrap: wrap;
     }
 
-    #submit {
-      padding: 12px 24px;
+    button#sendBtn {
+      padding: 12px 18px;
       font-size: 16px;
-      cursor: pointer;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid #aaa;
       background: #fff;
-      margin-top: 12px;
+      cursor: pointer;
     }
 
-    #result {
-      white-space: pre-line;
-      background: #f9f9f9;
+    button.secondary {
+      padding: 12px 18px;
+      font-size: 14px;
+      border-radius: 10px;
       border: 1px solid #ddd;
-      padding: 10px;
-      border-radius: 6px;
-      margin-top: 16px;
+      background: #fafafa;
+      cursor: pointer;
     }
+
+    #status {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      white-space: pre-line;
+    }
+
+    .ok { border-color: #c8e6c9; background: #e8f5e9; }
+    .err { border-color: #ffcdd2; background: #ffebee; }
   </style>
 </head>
-
 <body>
 
-<h1>Bolão Mega-Sena</h1>
+  <h1>Bolão Mega-Sena</h1>
+  <div class="hint">Preencha 3 jogos de 6 números e 1 jogo de 7 números (1 a 60).</div>
 
-<form
-  name="bolao-megasena"
-  method="POST"
-  action="/obrigado.html"
-  data-netlify="true"
-  netlify-honeypot="bot-field"
->
-  <!-- obrigatório Netlify -->
-  <input type="hidden" name="form-name" value="bolao-megasena" />
+  <!-- Netlify Forms: precisa existir no HTML -->
+  <form name="bolao-megasena" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+    <input type="hidden" name="form-name" value="bolao-megasena" />
+    <p style="display:none;">
+      <label>Não preencha: <input name="bot-field" /></label>
+    </p>
 
-  <!-- honeypot anti-spam -->
-  <p style="display:none;">
-    <label>Não preencha: <input name="bot-field" /></label>
-  </p>
+    <div class="field">
+      <label for="nome">Seu nome</label><br />
+      <!-- IMPORTANTE: name="nome" para o Netlify gravar -->
+      <input type="text" id="nome" name="nome" placeholder="Ex: Paulo" />
+    </div>
 
-  <div class="field">
-    <label for="nome">Seu nome:</label><br />
-    <input type="text" id="nome" style="width: 100%; max-width: 300px;" />
-  </div>
+    <div id="games"></div>
 
-  <div id="games-container"></div>
+    <!-- Campos que o Netlify vai gravar -->
+    <input type="hidden" name="jogo1" id="jogo1" />
+    <input type="hidden" name="jogo2" id="jogo2" />
+    <input type="hidden" name="jogo3" id="jogo3" />
+    <input type="hidden" name="jogo4" id="jogo4" />
+    <textarea name="resumo" id="resumo" style="display:none;"></textarea>
 
-  <!-- Campos ocultos que o Netlify salva -->
-  <input type="hidden" name="nome" id="hidden_nome" />
-  <input type="hidden" name="jogo1" id="hidden_jogo1" />
-  <input type="hidden" name="jogo2" id="hidden_jogo2" />
-  <input type="hidden" name="jogo3" id="hidden_jogo3" />
-  <input type="hidden" name="jogo4" id="hidden_jogo4" />
-  <textarea name="resumo" id="hidden_resumo" style="display:none;"></textarea>
+    <div class="actions">
+      <button id="sendBtn" type="submit">Enviar</button>
+      <button class="secondary" type="button" id="clearBtn">Limpar</button>
+    </div>
 
-  <button id="submit" type="submit">Finalizar jogos</button>
+    <div id="status">Status: pronto para enviar.</div>
+  </form>
 
-  <div id="result"></div>
-</form>
+  <script>
+    const gamesConfig = [
+      { id: "g1", label: "Jogo 1", max: 6 },
+      { id: "g2", label: "Jogo 2", max: 6 },
+      { id: "g3", label: "Jogo 3", max: 6 },
+      { id: "g4", label: "Jogo 4", max: 7 },
+    ];
 
-<script>
-  const gamesConfig = [
-    { id: 'jogo1', label: 'Jogo 1 (6 números)', max: 6 },
-    { id: 'jogo2', label: 'Jogo 2 (6 números)', max: 6 },
-    { id: 'jogo3', label: 'Jogo 3 (6 números)', max: 6 },
-    { id: 'jogo4', label: 'Jogo 4 (7 números)', max: 7 },
-  ];
-
-  const gamesState = {};
-  const container = document.getElementById('games-container');
-
-  gamesConfig.forEach(game => {
-    gamesState[game.id] = new Set();
-
-    const gameDiv = document.createElement('div');
-    gameDiv.className = 'game';
-
-    const title = document.createElement('div');
-    title.className = 'game-title';
-    title.textContent = game.label;
-
-    const counter = document.createElement('div');
-    counter.className = 'counter';
-    counter.id = `counter-${game.id}`;
-    counter.textContent = `Selecionados: 0 / ${game.max}`;
-
-    const numbersDiv = document.createElement('div');
-    numbersDiv.className = 'numbers';
-
-    for (let n = 1; n <= 60; n++) {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'number-btn';
-      btn.textContent = n;
-
-      btn.addEventListener('click', () => toggleNumber(game.id, n, btn, game.max));
-      numbersDiv.appendChild(btn);
-    }
-
-    gameDiv.appendChild(title);
-    gameDiv.appendChild(counter);
-    gameDiv.appendChild(numbersDiv);
-    container.appendChild(gameDiv);
-  });
-
-  function updateCounter(gameId, max) {
-    document.getElementById(`counter-${gameId}`).textContent =
-      `Selecionados: ${gamesState[gameId].size} / ${max}`;
-  }
-
-  function toggleNumber(gameId, number, btn, max) {
-    const set = gamesState[gameId];
-
-    if (set.has(number)) {
-      set.delete(number);
-      btn.classList.remove('selected');
-    } else {
-      if (set.size >= max) {
-        alert(`Este jogo aceita no máximo ${max} números.`);
-        return;
-      }
-      set.add(number);
-      btn.classList.add('selected');
-    }
-
-    updateCounter(gameId, max);
-  }
-
-  document.querySelector('form').addEventListener('submit', (e) => {
-    const nome = document.getElementById('nome').value.trim();
-
-    for (const game of gamesConfig) {
-      if (gamesState[game.id].size !== game.max) {
-        e.preventDefault();
-        alert(`${game.label} deve ter exatamente ${game.max} números.`);
-        return;
-      }
-    }
-
-    const jogos = {
-      jogo1: [...gamesState.jogo1].sort((a,b)=>a-b),
-      jogo2: [...gamesState.jogo2].sort((a,b)=>a-b),
-      jogo3: [...gamesState.jogo3].sort((a,b)=>a-b),
-      jogo4: [...gamesState.jogo4].sort((a,b)=>a-b),
+    const state = {
+      g1: new Set(),
+      g2: new Set(),
+      g3: new Set(),
+      g4: new Set(),
     };
 
-    document.getElementById('hidden_nome').value = nome || 'Sem nome';
-    document.getElementById('hidden_jogo1').value = jogos.jogo1.join(',');
-    document.getElementById('hidden_jogo2').value = jogos.jogo2.join(',');
-    document.getElementById('hidden_jogo3').value = jogos.jogo3.join(',');
-    document.getElementById('hidden_jogo4').value = jogos.jogo4.join(',');
+    const gamesEl = document.getElementById("games");
+    const statusEl = document.getElementById("status");
+    const formEl = document.querySelector('form[name="bolao-megasena"]');
 
-    document.getElementById('hidden_resumo').value =
-`Participante: ${nome || 'Sem nome'}
-Jogo 1: ${jogos.jogo1.join(', ')}
-Jogo 2: ${jogos.jogo2.join(', ')}
-Jogo 3: ${jogos.jogo3.join(', ')}
-Jogo 4: ${jogos.jogo4.join(', ')}`;
+    function renderGames() {
+      gamesEl.innerHTML = "";
 
-    document.getElementById('submit').disabled = true;
-    document.getElementById('submit').textContent = 'Enviando...';
-  });
-</script>
+      for (const g of gamesConfig) {
+        const wrap = document.createElement("div");
+        wrap.className = "game";
 
+        const title = document.createElement("div");
+        title.className = "game-title";
+
+        const left = document.createElement("div");
+        left.textContent = `${g.label} (${g.max} números)`;
+
+        const right = document.createElement("div");
+        right.className = "counter";
+        right.id = `counter-${g.id}`;
+        right.textContent = `Selecionados: 0/${g.max}`;
+
+        title.appendChild(left);
+        title.appendChild(right);
+
+        const numbers = document.createElement("div");
+        numbers.className = "numbers";
+
+        for (let n = 1; n <= 60; n++) {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "number-btn";
+          btn.textContent = n;
+
+          btn.addEventListener("click", () => toggle(g.id, n, btn, g.max));
+          numbers.appendChild(btn);
+        }
+
+        wrap.appendChild(title);
+        wrap.appendChild(numbers);
+        gamesEl.appendChild(wrap);
+      }
+    }
+
+    function updateCounter(gameId, max) {
+      const c = document.getElementById(`counter-${gameId}`);
+      if (!c) return;
+      c.textContent = `Selecionados: ${state[gameId].size}/${max}`;
+    }
+
+    function toggle(gameId, n, btn, max) {
+      const set = state[gameId];
+      if (set.has(n)) {
+        set.delete(n);
+        btn.classList.remove("selected");
+      } else {
+        if (set.size >= max) {
+          alert(`Este jogo aceita no máximo ${max} números.`);
+          return;
+        }
+        set.add(n);
+        btn.classList.add("selected");
+      }
+      updateCounter(gameId, max);
+    }
+
+    function getSortedArray(set) {
+      return Array.from(set).sort((a,b) => a - b);
+    }
+
+    function validateAll() {
+      for (const g of gamesConfig) {
+        if (state[g.id].size !== g.max) {
+          return `${g.label} deve ter exatamente ${g.max} números.`;
+        }
+      }
+      return null;
+    }
+
+    function fillNetlifyFields() {
+      const nome = (document.getElementById("nome").value || "").trim() || "Sem nome";
+
+      const j1 = getSortedArray(state.g1);
+      const j2 = getSortedArray(state.g2);
+      const j3 = getSortedArray(state.g3);
+      const j4 = getSortedArray(state.g4);
+
+      document.getElementById("jogo1").value = j1.join(",");
+      document.getElementById("jogo2").value = j2.join(",");
+      document.getElementById("jogo3").value = j3.join(",");
+      document.getElementById("jogo4").value = j4.join(",");
+
+      const resumo =
+`Participante: ${nome}
+Jogo 1: ${j1.join(", ")}
+Jogo 2: ${j2.join(", ")}
+Jogo 3: ${j3.join(", ")}
+Jogo 4: ${j4.join(", ")}`;
+
+      document.getElementById("resumo").value = resumo;
+
+      return { nome, resumo };
+    }
+
+    // Envio via fetch -> mantém na mesma página e melhora a confiabilidade
+    formEl.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      statusEl.className = "";
+      statusEl.textContent = "Enviando...";
+
+      const err = validateAll();
+      if (err) {
+        statusEl.className = "err";
+        statusEl.textContent = "Erro: " + err;
+        return;
+      }
+
+      const { nome, resumo } = fillNetlifyFields();
+
+      try {
+        const formData = new FormData(formEl);
+
+        const resp = await fetch("/", {
+          method: "POST",
+          body: new URLSearchParams(formData).toString(),
+          headers: { "Content-Type": "application/x-www-form-urlencoded" }
+        });
+
+        if (!resp.ok) {
+          statusEl.className = "err";
+          statusEl.textContent = `Erro ao enviar (HTTP ${resp.status}). Tente novamente.`;
+          return;
+        }
+
+        statusEl.className = "ok";
+        statusEl.textContent =
+`Enviado com sucesso ✅
+
+${resumo}
+
+Dica: as submissões aparecem em Netlify > Forms.`;
+
+      } catch (ex) {
+        statusEl.className = "err";
+        statusEl.textContent = "Erro ao enviar. Verifique sua internet e tente novamente.";
+      }
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      // limpa nome
+      document.getElementById("nome").value = "";
+
+      // limpa seleções
+      for (const g of gamesConfig) {
+        state[g.id].clear();
+      }
+
+      // re-render para limpar os botões (jeito mais simples)
+      renderGames();
+
+      // limpa status
+      statusEl.className = "";
+      statusEl.textContent = "Status: pronto para enviar.";
+    });
+
+    renderGames();
+  </script>
 </body>
 </html>
