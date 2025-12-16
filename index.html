@@ -117,17 +117,13 @@
   <h1>Bolão Mega-Sena</h1>
   <div class="hint">Preencha 3 jogos de 6 números e 1 jogo de 7 números (1 a 60).</div>
 
-  <!-- Netlify Forms: precisa existir no HTML -->
-  <form name="bolao-megasena" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+  <!-- Netlify Forms -->
+  <form name="bolao-megasena" method="POST" data-netlify="true">
     <input type="hidden" name="form-name" value="bolao-megasena" />
-    <p style="display:none;">
-      <label>Não preencha: <input name="bot-field" /></label>
-    </p>
 
     <div class="field">
       <label for="nome">Seu nome</label><br />
-      <!-- IMPORTANTE: name="nome" para o Netlify gravar -->
-      <input type="text" id="nome" name="nome" placeholder="Ex: Paulo" />
+      <input type="text" id="nome" name="nome" placeholder="Ex: Seu Nome" />
     </div>
 
     <div id="games"></div>
@@ -266,7 +262,7 @@ Jogo 4: ${j4.join(", ")}`;
       return { nome, resumo };
     }
 
-    // Envio via fetch -> mantém na mesma página e melhora a confiabilidade
+    // Envio via fetch (fica na mesma página)
     formEl.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -280,7 +276,7 @@ Jogo 4: ${j4.join(", ")}`;
         return;
       }
 
-      const { nome, resumo } = fillNetlifyFields();
+      const { resumo } = fillNetlifyFields();
 
       try {
         const formData = new FormData(formEl);
@@ -298,12 +294,7 @@ Jogo 4: ${j4.join(", ")}`;
         }
 
         statusEl.className = "ok";
-        statusEl.textContent =
-`Enviado com sucesso ✅
-
-${resumo}
-
-Dica: as submissões aparecem em Netlify > Forms.`;
+        statusEl.textContent = `Enviado com sucesso ✅\n\n${resumo}`;
 
       } catch (ex) {
         statusEl.className = "err";
@@ -312,18 +303,14 @@ Dica: as submissões aparecem em Netlify > Forms.`;
     });
 
     document.getElementById("clearBtn").addEventListener("click", () => {
-      // limpa nome
       document.getElementById("nome").value = "";
 
-      // limpa seleções
       for (const g of gamesConfig) {
         state[g.id].clear();
       }
 
-      // re-render para limpar os botões (jeito mais simples)
       renderGames();
 
-      // limpa status
       statusEl.className = "";
       statusEl.textContent = "Status: pronto para enviar.";
     });
