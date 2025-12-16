@@ -107,7 +107,6 @@
       background: #fafafa;
       white-space: pre-line;
     }
-
     .ok { border-color: #c8e6c9; background: #e8f5e9; }
     .err { border-color: #ffcdd2; background: #ffebee; }
   </style>
@@ -118,17 +117,28 @@
   <div class="hint">Preencha 3 jogos de 6 números e 1 jogo de 7 números (1 a 60).</div>
 
   <!-- Netlify Forms -->
-  <form name="bolao-megasena" method="POST" data-netlify="true">
+  <form
+    name="bolao-megasena"
+    method="POST"
+    data-netlify="true"
+    netlify-honeypot="bot-field"
+    action="/obrigado.html"
+  >
     <input type="hidden" name="form-name" value="bolao-megasena" />
+
+    <!-- Honeypot (anti-spam). Deixe oculto. -->
+    <p style="display:none;">
+      <label>Não preencha: <input name="bot-field" /></label>
+    </p>
 
     <div class="field">
       <label for="nome">Seu nome</label><br />
-      <input type="text" id="nome" name="nome" placeholder="Ex: Seu Nome" />
+      <input type="text" id="nome" name="nome" placeholder="Ex: Seu Nome" required />
     </div>
 
     <div id="games"></div>
 
-    <!-- Campos que o Netlify vai gravar -->
+    <!-- Campos gravados pelo Netlify -->
     <input type="hidden" name="jogo1" id="jogo1" />
     <input type="hidden" name="jogo2" id="jogo2" />
     <input type="hidden" name="jogo3" id="jogo3" />
@@ -238,7 +248,7 @@
     }
 
     function fillNetlifyFields() {
-      const nome = (document.getElementById("nome").value || "").trim() || "Sem nome";
+      const nome = (document.getElementById("nome").value || "").trim();
 
       const j1 = getSortedArray(state.g1);
       const j2 = getSortedArray(state.g2);
@@ -259,58 +269,30 @@ Jogo 4: ${j4.join(", ")}`;
 
       document.getElementById("resumo").value = resumo;
 
-      return { nome, resumo };
+      statusEl.className = "ok";
+      statusEl.textContent = "Tudo certo ✅ Enviando...";
     }
 
-    // Envio via fetch (fica na mesma página)
-    formEl.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
+    formEl.addEventListener("submit", (e) => {
       statusEl.className = "";
-      statusEl.textContent = "Enviando...";
+      statusEl.textContent = "Validando...";
 
       const err = validateAll();
       if (err) {
+        e.preventDefault();
         statusEl.className = "err";
         statusEl.textContent = "Erro: " + err;
         return;
       }
 
-      const { resumo } = fillNetlifyFields();
-
-      try {
-        const formData = new FormData(formEl);
-
-        const resp = await fetch("/", {
-          method: "POST",
-          body: new URLSearchParams(formData).toString(),
-          headers: { "Content-Type": "application/x-www-form-urlencoded" }
-        });
-
-        if (!resp.ok) {
-          statusEl.className = "err";
-          statusEl.textContent = `Erro ao enviar (HTTP ${resp.status}). Tente novamente.`;
-          return;
-        }
-
-        statusEl.className = "ok";
-        statusEl.textContent = `Enviado com sucesso ✅\n\n${resumo}`;
-
-      } catch (ex) {
-        statusEl.className = "err";
-        statusEl.textContent = "Erro ao enviar. Verifique sua internet e tente novamente.";
-      }
+      fillNetlifyFields();
+      // deixa enviar normalmente (mais compatível e menos chance de spam)
     });
 
     document.getElementById("clearBtn").addEventListener("click", () => {
       document.getElementById("nome").value = "";
-
-      for (const g of gamesConfig) {
-        state[g.id].clear();
-      }
-
+      for (const g of gamesConfig) state[g.id].clear();
       renderGames();
-
       statusEl.className = "";
       statusEl.textContent = "Status: pronto para enviar.";
     });
