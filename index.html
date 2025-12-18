@@ -82,20 +82,19 @@
     }
 
     button#sendBtn {
-    padding: 12px 18px;
-    font-size: 16px;
-    border-radius: 10px;
-    border: 1px solid #aaa;
+      padding: 12px 18px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #aaa;
 
-    background-color: #ffffff;   /* explícito */
-    color: #000000;              /* 👈 ISSO resolve o bug */
+      background-color: #ffffff;   /* explícito */
+      color: #000000;              /* garante texto no mobile */
 
-    cursor: pointer;
+      cursor: pointer;
 
-  -webkit-appearance: none;    /* iOS Safari */
-  appearance: none;
+      -webkit-appearance: none;    /* iOS Safari */
+      appearance: none;
     }
-
 
     button.secondary {
       padding: 12px 18px;
@@ -121,7 +120,7 @@
 <body>
 
   <h1>Bolão Mega-Sena</h1>
-  <div class="hint">Preencha 3 jogos de 6 números e 1 jogo de 7 números (1 a 60).</div>
+  <div class="hint">Preencha 3 jogos de 6 números (1 a 60).</div>
 
   <!-- Netlify Forms -->
   <form
@@ -149,7 +148,6 @@
     <input type="hidden" name="jogo1" id="jogo1" />
     <input type="hidden" name="jogo2" id="jogo2" />
     <input type="hidden" name="jogo3" id="jogo3" />
-    <input type="hidden" name="jogo4" id="jogo4" />
     <textarea name="resumo" id="resumo" style="display:none;"></textarea>
 
     <div class="actions">
@@ -165,14 +163,12 @@
       { id: "g1", label: "Jogo 1", max: 6 },
       { id: "g2", label: "Jogo 2", max: 6 },
       { id: "g3", label: "Jogo 3", max: 6 },
-      { id: "g4", label: "Jogo 4", max: 7 },
     ];
 
     const state = {
       g1: new Set(),
       g2: new Set(),
       g3: new Set(),
-      g4: new Set(),
     };
 
     const gamesEl = document.getElementById("games");
@@ -260,19 +256,16 @@
       const j1 = getSortedArray(state.g1);
       const j2 = getSortedArray(state.g2);
       const j3 = getSortedArray(state.g3);
-      const j4 = getSortedArray(state.g4);
 
       document.getElementById("jogo1").value = j1.join(",");
       document.getElementById("jogo2").value = j2.join(",");
       document.getElementById("jogo3").value = j3.join(",");
-      document.getElementById("jogo4").value = j4.join(",");
 
       const resumo =
 `Participante: ${nome}
 Jogo 1: ${j1.join(", ")}
 Jogo 2: ${j2.join(", ")}
-Jogo 3: ${j3.join(", ")}
-Jogo 4: ${j4.join(", ")}`;
+Jogo 3: ${j3.join(", ")}`;
 
       document.getElementById("resumo").value = resumo;
 
@@ -293,7 +286,7 @@ Jogo 4: ${j4.join(", ")}`;
       }
 
       fillNetlifyFields();
-      // deixa enviar normalmente (mais compatível e menos chance de spam)
+      // deixa enviar normalmente
     });
 
     document.getElementById("clearBtn").addEventListener("click", () => {
